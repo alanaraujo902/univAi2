@@ -131,8 +131,9 @@ class SummariesNotifier extends StateNotifier<SummariesState> {
         data['image_url'] = imageUrl;
       }
 
+      // CORREÇÃO: Adicionamos '/generate' para chamar a rota correta da IA
       final response = await _api.post(
-        AppConstants.summariesEndpoint,
+        '${AppConstants.summariesEndpoint}/generate',
         data: data,
       );
 

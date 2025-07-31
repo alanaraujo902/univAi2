@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:study_app/constants/app_constants.dart';
 import 'package:study_app/services/storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Adicione esta importação
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -258,3 +259,8 @@ enum ApiExceptionType {
   unknown,
 }
 
+// Crie um provider global para o ApiService
+final apiServiceProvider = Provider<ApiService>((ref) {
+  // Retorna a instância singleton que já foi inicializada no main.dart
+  return ApiService();
+});
