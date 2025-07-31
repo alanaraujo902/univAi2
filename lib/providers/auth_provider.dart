@@ -78,8 +78,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final result = await _authService.login(email, password);
-      
+
       if (result.success) {
+        // ADICIONE ESTE PRINT PARA CONFIRMAR A MUDANÇA DE ESTADO
+        print('[AuthNotifier] Login SUCESSO! Mudando estado para AUTHENTICATED.');
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: result.user,

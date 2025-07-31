@@ -65,10 +65,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         Navigator.of(context).pop();
       }
     } catch (e) {
+      // ADICIONE ESTAS LINHAS AQUI PARA VER O ERRO REAL
+      print('--- ERRO DETALHADO NO FLUTTER AO TENTAR REGISTRAR ---');
+      print(e);
+      print('----------------------------------------------------');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(e.toString()), // Isso mostra a mensagem genérica
             backgroundColor: AppTheme.errorColor,
           ),
         );

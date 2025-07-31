@@ -36,15 +36,40 @@ class User extends HiveObject {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Pega o sub-dicionário 'user_metadata' de forma segura.
+    final metadata = json['user_metadata'] is Map<String, dynamic>
+        ? json['user_metadata'] as Map<String, dynamic>
+        : <String, dynamic>{};
+
+
+    // Função auxiliar para processar as datas de forma segura
+    DateTime? _parseDate(String? dateString) {
+      if (dateString == null) return null;
+      try {
+        return DateTime.parse(dateString);
+      } catch (e) {
+        // Se o parse falhar, retorna null para não quebrar o app
+        print('Erro ao processar data: $dateString');
+        return null;
+      }
+    }
+
     return User(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      fullName: json['full_name'] as String,
-      avatarUrl: json['avatar_url'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      lastLoginAt: json['last_login_at'] != null 
-          ? DateTime.parse(json['last_login_at'] as String)
-          : null,
+      id: json['id'] as String? ?? '', // Garante que nunca seja nulo
+      email: json['email'] as String? ?? '', // Garante que nunca seja nulo
+
+      // Busca o 'full_name' dentro de 'metadata' de forma segura
+      fullName: metadata['full_name'] as String? ?? '',
+
+      // Busca o 'avatar_url' dentro de 'metadata'
+      avatarUrl: metadata['avatar_url'] as String?,
+
+      // Usa a função segura para processar as datas
+      createdAt: _parseDate(json['created_at'] as String?) ?? DateTime.now(),
+      lastLoginAt: _parseDate(json['last_sign_in_at'] as String?),
+
+
+      // 'preferences' não vem do Supabase por padrão, então tratamos como opcional
       preferences: json['preferences'] as Map<String, dynamic>?,
     );
   }

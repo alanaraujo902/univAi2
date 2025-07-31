@@ -8,24 +8,35 @@ import 'package:study_app/screens/auth/login_screen.dart';
 import 'package:study_app/screens/home/main_screen.dart';
 import 'package:study_app/services/notification_service.dart';
 
+// Importações dos serviços
+import 'package:study_app/services/storage_service.dart';
+import 'package:study_app/services/api_service.dart';
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Inicializar Hive para armazenamento local
+
+  // 1. INICIALIZAR HIVE PRIMEIRO (ESSENCIAL)
   await Hive.initFlutter();
-  await Hive.openBox('settings');
-  await Hive.openBox('cache');
-  
-  // Inicializar notificações
+
+  // 2. AGORA INICIALIZAR OS SERVIÇOS QUE DEPENDEM DO HIVE E DA REDE
+  // O StorageService já abre as caixas 'settings' e 'cache' dentro dele
+  await StorageService().initialize();
+  ApiService().initialize();
+
+  // 3. REMOVER CHAMADAS DUPLICADAS (já estão no StorageService)
+  // await Hive.openBox('settings'); <-- REMOVIDO
+  // await Hive.openBox('cache');    <-- REMOVIDO
+
+  // 4. INICIALIZAR O RESTO
   await NotificationService.initialize();
-  
+
   runApp(
     const ProviderScope(
       child: StudyApp(),
     ),
   );
 }
-
 class StudyApp extends ConsumerWidget {
   const StudyApp({super.key});
 

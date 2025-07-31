@@ -24,17 +24,27 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final token = data['access_token'] as String;
-        final userData = data['user'] as Map<String, dynamic>;
-        
-        final user = User.fromJson(userData);
-        
-        // Salvar token e dados do usuário
-        await _storage.saveToken(token);
-        await _storage.saveUser(user);
-        
-        return AuthResult.success(user: user, token: token);
+        // Bloco de try-catch específico para o processamento dos dados
+        try {
+          final data = response.data as Map<String, dynamic>;
+          final token = data['access_token'] as String;
+          final userData = data['user'] as Map<String, dynamic>;
+
+          final user = User.fromJson(userData);
+
+          await _storage.saveToken(token);
+          await _storage.saveUser(user);
+
+          return AuthResult.success(user: user, token: token);
+        } catch (e, stackTrace) {
+          // Se o processamento falhar, o erro exato será impresso aqui
+          print('--- ERRO AO PROCESSAR A RESPOSTA DO LOGIN ---');
+          print('Erro: $e');
+          print('StackTrace: $stackTrace');
+          print('Dados recebidos que causaram o erro: ${response.data}');
+          print('-------------------------------------------');
+          return AuthResult.failure(message: 'Erro ao processar os dados do usuário.');
+        }
       } else {
         return AuthResult.failure(
           message: AppConstants.errorMessages['invalid_credentials']!,

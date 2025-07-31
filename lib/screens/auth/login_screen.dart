@@ -31,27 +31,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      await ref.read(authProvider.notifier).login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    // Apenas chama o método do provider. O provider vai gerenciar o estado.
+    // A UI vai reagir automaticamente quando o estado mudar em `main.dart`.
+    await ref.read(authProvider.notifier).login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
   }
 
   void _navigateToRegister() {
