@@ -251,7 +251,9 @@ class _SubjectDetailScreenState extends ConsumerState<SubjectDetailScreen>
           Expanded(
             child: _buildStatItem(
               'Revisões',
-              widget.subject.pendingReviews.toString(),
+
+              //widget.subject.pendingReviews.toString(),
+              "0",
               Icons.quiz,
               AppTheme.warningColor,
             ),
