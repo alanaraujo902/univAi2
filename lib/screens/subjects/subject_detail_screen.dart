@@ -238,7 +238,7 @@ class _SubjectDetailScreenState extends ConsumerState<SubjectDetailScreen>
           Expanded(
             child: _buildStatItem(
               'Submatérias',
-              widget.subject.subjectsCount.toString(),
+              (widget.subject.children?.length ?? 0).toString(),
               Icons.folder,
               AppTheme.successColor,
             ),

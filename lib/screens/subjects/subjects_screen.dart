@@ -191,6 +191,8 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
   }
 
   Widget _buildSubjectListItem(subject) {
+    final childrenCount = subject.children?.length ?? 0; // CORREÇÃO AQUI
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -218,9 +220,8 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                   size: 24,
                 ),
               ),
-              
               const SizedBox(width: 16),
-              
+
               // Informações da matéria
               Expanded(
                 child: Column(
@@ -236,7 +237,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     if (subject.description != null) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -249,9 +250,9 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Estatísticas
                     Row(
                       children: [
@@ -268,8 +269,9 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                             color: Colors.grey[500],
                           ),
                         ),
+
                         const SizedBox(width: 16),
-                        if (subject.subjectsCount > 0) ...[
+                        if (childrenCount > 0) ...[ // CORREÇÃO AQUI
                           Icon(
                             Icons.folder,
                             size: 16,
@@ -277,7 +279,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${subject.subjectsCount} submatérias',
+                            '$childrenCount submatérias', // CORREÇÃO AQUI
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[500],
@@ -289,7 +291,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                   ],
                 ),
               ),
-              
+
               // Menu de ações
               PopupMenuButton<String>(
                 onSelected: (value) => _handleSubjectAction(value, subject),
@@ -332,6 +334,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
       ),
     );
   }
+
 
   Widget _buildSubjectGridItem(subject) {
     return Card(
