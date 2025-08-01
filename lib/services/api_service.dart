@@ -1,9 +1,11 @@
+// Caminho: lib/services/api_service.dart
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:study_app/constants/app_constants.dart';
 import 'package:study_app/services/storage_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Adicione esta importação
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -24,13 +26,26 @@ class ApiService {
       },
     ));
 
-    // Interceptor para adicionar token de autenticação
+    // Interceptor para adicionar token de autenticação e logs de depuração
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _storage.getToken();
+
+        // --- INÍCIO DO CÓDIGO DE DEBUG ---
+        print('--- INTERCEPTOR DE REQUISIÇÃO ---');
         if (token != null) {
+          // Garante que o token tenha um comprimento mínimo antes de tentar extrair uma substring
+          final displayToken = token.length > 15 ? '${token.substring(0, 15)}...' : token;
+          print('Token encontrado: $displayToken');
           options.headers['Authorization'] = 'Bearer $token';
+          print('Cabeçalho de Autorização ADICIONADO.');
+        } else {
+          print('Token NÃO encontrado. A requisição não será autenticada.');
         }
+        print('Enviando requisição para: ${options.uri}');
+        print('---------------------------------');
+        // --- FIM DO CÓDIGO DE DEBUG ---
+
         handler.next(options);
       },
       onError: (error, handler) async {
@@ -53,10 +68,10 @@ class ApiService {
 
   // Métodos HTTP genéricos
   Future<Response<T>> get<T>(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+      String path, {
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
     try {
       return await _dio.get<T>(
         path,
@@ -69,11 +84,11 @@ class ApiService {
   }
 
   Future<Response<T>> post<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
     try {
       return await _dio.post<T>(
         path,
@@ -87,11 +102,11 @@ class ApiService {
   }
 
   Future<Response<T>> put<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
     try {
       return await _dio.put<T>(
         path,
@@ -105,11 +120,11 @@ class ApiService {
   }
 
   Future<Response<T>> delete<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
     try {
       return await _dio.delete<T>(
         path,
@@ -124,12 +139,12 @@ class ApiService {
 
   // Upload de arquivo
   Future<Response<T>> uploadFile<T>(
-    String path,
-    File file, {
-    String fieldName = 'file',
-    Map<String, dynamic>? data,
-    ProgressCallback? onSendProgress,
-  }) async {
+      String path,
+      File file, {
+        String fieldName = 'file',
+        Map<String, dynamic>? data,
+        ProgressCallback? onSendProgress,
+      }) async {
     try {
       final formData = FormData.fromMap({
         fieldName: await MultipartFile.fromFile(
@@ -164,7 +179,7 @@ class ApiService {
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode ?? 0;
         final message = _extractErrorMessage(error.response?.data);
-        
+
         return ApiException(
           message: message,
           statusCode: statusCode,
@@ -203,9 +218,9 @@ class ApiService {
 
   String _extractErrorMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
-      return data['message'] ?? 
-             data['error'] ?? 
-             AppConstants.errorMessages['server_error']!;
+      return data['message'] ??
+          data['error'] ??
+          AppConstants.errorMessages['server_error']!;
     }
     return AppConstants.errorMessages['server_error']!;
   }

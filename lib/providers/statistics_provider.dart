@@ -36,9 +36,10 @@ class StatisticsState {
 
 // Notifier das estatísticas
 class StatisticsNotifier extends StateNotifier<StatisticsState> {
-  final ApiService _api = ApiService();
+  final ApiService _api; // A inicialização foi removida
 
-  StatisticsNotifier() : super(StatisticsState(isLoading: false));
+  // O ApiService é solicitado no construtor
+  StatisticsNotifier(this._api) : super(StatisticsState(isLoading: false));
 
   // Carregar estatísticas
   Future<void> loadStatistics({String? period}) async {
@@ -50,8 +51,9 @@ class StatisticsNotifier extends StateNotifier<StatisticsState> {
         queryParams['period'] = period;
       }
 
+      // CORREÇÃO: Adicionando o sub-caminho '/overview'
       final response = await _api.get(
-        AppConstants.statisticsEndpoint,
+        '${AppConstants.statisticsEndpoint}/overview',
         queryParameters: queryParams,
       );
 
@@ -78,14 +80,12 @@ class StatisticsNotifier extends StateNotifier<StatisticsState> {
     }
   }
 
-  // --- INÍCIO DA CORREÇÃO ---
   // Método adicionado para atender à chamada da tela de estatísticas
   Future<void> loadDetailedStatistics() async {
     // Por enquanto, este método pode simplesmente chamar o método principal.
     // No futuro, ele poderia buscar dados mais detalhados de outro endpoint.
     await loadStatistics();
   }
-  // --- FIM DA CORREÇÃO ---
 
   // Carregar estatísticas por período
   Future<void> loadPeriodStatistics(String period) async {
@@ -184,12 +184,17 @@ class StatisticsNotifier extends StateNotifier<StatisticsState> {
 
 // Provider das estatísticas
 final statisticsProvider = StateNotifierProvider<StatisticsNotifier, StatisticsState>((ref) {
-  return StatisticsNotifier();
+  // Usa o provider para obter a instância do ApiService
+  final apiService = ref.watch(apiServiceProvider);
+  // Injeta a instância no Notifier
+  return StatisticsNotifier(apiService);
 });
 
 // Provider para estatísticas por período
 final periodStatisticsProvider = StateNotifierProvider.family<StatisticsNotifier, StatisticsState, String>((ref, period) {
-  final notifier = StatisticsNotifier();
+  // Faz o mesmo para o provider de família
+  final apiService = ref.watch(apiServiceProvider);
+  final notifier = StatisticsNotifier(apiService);
   notifier.loadPeriodStatistics(period);
   return notifier;
 });

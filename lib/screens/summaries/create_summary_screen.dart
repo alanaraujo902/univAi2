@@ -2,25 +2,28 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:study_app/constants/app_theme.dart';
-import 'package:study_app/providers/summaries_provider.dart';
 import 'package:study_app/providers/statistics_provider.dart';
+import 'package:study_app/providers/summaries_provider.dart';
 import 'package:study_app/widgets/custom_button.dart';
 import 'package:study_app/widgets/custom_text_field.dart';
+// MODIFICAÇÃO 1: Importar o widget SubjectSelector
+import 'package:study_app/widgets/subject_selector.dart';
 
 class CreateSummaryScreen extends ConsumerStatefulWidget {
-  // --- INÍCIO DA CORREÇÃO 1/3: Adicionar o campo da classe ---
   final String? preSelectedSubjectId;
 
   const CreateSummaryScreen({
     super.key,
-    this.preSelectedSubjectId, // --- INÍCIO DA CORREÇÃO 2/3: Adicionar ao construtor ---
+    this.preSelectedSubjectId,
   });
 
   @override
-  ConsumerState<CreateSummaryScreen> createState() => _CreateSummaryScreenState();
+  ConsumerState<CreateSummaryScreen> createState() =>
+      _CreateSummaryScreenState();
 }
 
 class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
@@ -35,7 +38,6 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
   @override
   void initState() {
     super.initState();
-    // --- INÍCIO DA CORREÇÃO 3/3: Usar o valor do parâmetro na inicialização ---
     _selectedSubjectId = widget.preSelectedSubjectId;
   }
 
@@ -43,32 +45,6 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
   void dispose() {
     _queryController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
-      );
-
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao capturar imagem: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _pickImageFromGallery() async {
@@ -97,6 +73,32 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao capturar imagem: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
   void _removeImage() {
     setState(() {
       _selectedImage = null;
@@ -104,7 +106,18 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
   }
 
   Future<void> _createSummary() async {
+    // MODIFICAÇÃO 2: Adicionada validação para garantir que uma matéria foi selecionada
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedSubjectId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, selecione uma matéria para salvar o resumo.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -237,7 +250,17 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
               const SizedBox(height: 24),
               _buildImageSection(),
               const SizedBox(height: 24),
-              _buildSubjectSelection(),
+              // MODIFICAÇÃO 3: Substituição do placeholder pelo widget real
+              SubjectSelector(
+                label: 'Matéria',
+                hint: 'Selecione uma matéria para o resumo',
+                selectedSubjectId: _selectedSubjectId,
+                onSubjectSelected: (subjectId) {
+                  setState(() {
+                    _selectedSubjectId = subjectId;
+                  });
+                },
+              ),
               const SizedBox(height: 32),
               CustomButton(
                 text: 'Gerar Resumo com IA',
@@ -265,7 +288,7 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
                         'A IA analisará sua pergunta e criará um resumo personalizado em formato markdown.',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.primaryColor.withOpacity(0.9),
                         ),
                       ),
                     ),
@@ -398,58 +421,6 @@ class _CreateSummaryScreenState extends ConsumerState<CreateSummaryScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSubjectSelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Matéria (opcional)',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Aqui você pode querer usar seu widget SubjectSelector
-        // Por simplicidade, mantemos um placeholder.
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.folder_outlined,
-                color: Colors.grey[400],
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                // Mostra o ID da matéria pré-selecionada se houver
-                _selectedSubjectId == null ? 'Selecionar matéria' : 'Matéria ID: $_selectedSubjectId',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.grey[400],
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

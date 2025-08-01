@@ -30,9 +30,10 @@ class DecksState {
 
 // --- Notifier para a lista de Decks ---
 class DecksNotifier extends StateNotifier<DecksState> {
-  final ApiService _api = ApiService();
+  final ApiService _api; // A inicialização foi removida
 
-  DecksNotifier() : super(DecksState());
+  // O ApiService é solicitado no construtor
+  DecksNotifier(this._api) : super(DecksState());
 
   Future<void> loadDecks() async {
     if (state.isLoading) return;
@@ -88,7 +89,10 @@ class DecksNotifier extends StateNotifier<DecksState> {
 
 // --- Provider para a lista de Decks ---
 final decksProvider = StateNotifierProvider<DecksNotifier, DecksState>((ref) {
-  return DecksNotifier();
+  // Usa o provider para obter a instância do ApiService
+  final apiService = ref.watch(apiServiceProvider);
+  // Injeta a instância no Notifier
+  return DecksNotifier(apiService);
 });
 
 
@@ -118,9 +122,10 @@ class DeckDetailState {
 
 // --- Notifier para os detalhes de um Deck ---
 class DeckDetailNotifier extends StateNotifier<DeckDetailState> {
-  final ApiService _api = ApiService();
+  final ApiService _api; // A inicialização foi removida
 
-  DeckDetailNotifier() : super(DeckDetailState());
+  // O ApiService é solicitado no construtor
+  DeckDetailNotifier(this._api) : super(DeckDetailState());
 
   Future<void> loadDeckDetail(String deckId) async {
     // Lógica para buscar os detalhes de um deck e seus resumos
@@ -150,7 +155,9 @@ class DeckDetailNotifier extends StateNotifier<DeckDetailState> {
 
 // --- Provider de família para os detalhes de um Deck ---
 final deckDetailProvider = StateNotifierProvider.family<DeckDetailNotifier, DeckDetailState, String>((ref, deckId) {
-  final notifier = DeckDetailNotifier();
+  // Faz o mesmo para o provider de família
+  final apiService = ref.watch(apiServiceProvider);
+  final notifier = DeckDetailNotifier(apiService);
   notifier.loadDeckDetail(deckId);
   return notifier;
 });

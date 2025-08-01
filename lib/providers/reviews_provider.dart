@@ -29,9 +29,10 @@ class ReviewsState {
 
 // 2. Classe Notificadora (Notifier)
 class ReviewsNotifier extends StateNotifier<ReviewsState> {
-  final ApiService _api = ApiService();
+  final ApiService _api; // A inicialização foi removida
 
-  ReviewsNotifier() : super(ReviewsState());
+  // O ApiService é solicitado no construtor
+  ReviewsNotifier(this._api) : super(ReviewsState());
 
   Future<void> loadPendingReviews() async {
     if (state.isLoading) return;
@@ -58,5 +59,8 @@ class ReviewsNotifier extends StateNotifier<ReviewsState> {
 
 // 3. Provider
 final reviewsProvider = StateNotifierProvider<ReviewsNotifier, ReviewsState>((ref) {
-  return ReviewsNotifier();
+  // Usa o provider para obter a instância do ApiService
+  final apiService = ref.watch(apiServiceProvider);
+  // Injeta a instância no Notifier
+  return ReviewsNotifier(apiService);
 });
