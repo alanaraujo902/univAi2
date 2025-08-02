@@ -313,6 +313,48 @@ class SummariesNotifier extends StateNotifier<SummariesState> {
   Future<void> refresh() async {
     await loadSummaries(refresh: true);
   }
+
+// ADICIONE este novo método
+  Future<void> loadSummariesByHierarchy(String subjectId) async {
+    if (state.isLoading) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      // Chama o novo endpoint da API
+      final response = await _api.get(
+        '${AppConstants.subjectsEndpoint}/$subjectId/summaries',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final summariesData = data['summaries'] as List;
+        final newSummaries = summariesData
+            .map((json) => Summary.fromJson(json))
+            .toList();
+
+        state = state.copyWith(
+          summaries: newSummaries,
+          isLoading: false,
+          hasMore: false, // Geralmente carregamos tudo de uma vez para esta visão
+          currentPage: 1,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Erro ao carregar resumos da matéria',
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+
+
 }
 
 // Provider dos resumos
@@ -336,4 +378,14 @@ final summariesBySubjectProvider = StateNotifierProvider.family<SummariesNotifie
 final favoriteSummariesProvider = Provider<List<Summary>>((ref) {
   final summariesState = ref.watch(summariesProvider);
   return summariesState.summaries.where((s) => s.isFavorite).toList();
+});
+
+// Provider para carregar os resumos da hierarquia
+
+final summariesBySubjectHierarchyProvider = StateNotifierProvider.family<SummariesNotifier, SummariesState, String>((ref, subjectId) {
+  final apiService = ref.watch(apiServiceProvider);
+  final notifier = SummariesNotifier(apiService);
+  // Chama um novo método para carregar os dados da hierarquia
+  notifier.loadSummariesByHierarchy(subjectId);
+  return notifier;
 });

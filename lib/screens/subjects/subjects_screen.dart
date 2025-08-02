@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:study_app/constants/app_theme.dart';
 import 'package:study_app/providers/subjects_provider.dart';
+import 'package:study_app/screens/subjects/subject_content_screen.dart';
 import 'package:study_app/screens/subjects/subject_detail_screen.dart';
 import 'package:study_app/screens/subjects/create_subject_screen.dart';
 import 'package:study_app/widgets/search_bar.dart';
@@ -216,7 +217,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Expanded garante que o texto não ultrapasse o espaço disponível
+            // Expanded garante que o texto do nome ocupe apenas o espaço restante
             Expanded(
               child: Text(
                 subject.name,
@@ -228,20 +229,51 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            // Botão para adicionar submatéria
-            IconButton(
-              icon: const Icon(
-                Icons.add_circle_outline,
-                color: AppTheme.primaryColor,
-              ),
-              tooltip: 'Adicionar submatéria',
-              onPressed: () {
-                // Reutiliza a mesma lógica que o menu de ações
-                _handleSubjectAction('add_child', subject);
-              },
-              // Reduz o padding para não ocupar muito espaço
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // <<< NOVO BOTÃO >>>
+                IconButton(
+                  icon: const Icon(
+                    Icons.list_alt_outlined,
+                    color: AppTheme.secondaryColor, // cor diferenciada
+                  ),
+                  tooltip: 'Ver todo o conteúdo',
+                  onPressed: () => _handleSubjectAction('view_content', subject),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 8),
+
+                // Botão de adicionar submatéria
+                IconButton(
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    color: AppTheme.primaryColor,
+                  ),
+                  tooltip: 'Adicionar submatéria',
+                  onPressed: () {
+                    _handleSubjectAction('add_child', subject);
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 8),
+
+                // Botão de deletar
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppTheme.errorColor,
+                  ),
+                  tooltip: 'Excluir',
+                  onPressed: () {
+                    _handleSubjectAction('delete', subject);
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
           ],
         ),
@@ -384,6 +416,19 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
               PopupMenuButton<String>(
                 onSelected: (value) => _handleSubjectAction(value, subject),
                 itemBuilder: (context) => [
+
+
+                  const PopupMenuItem(
+                    value: 'view_content',
+                    child: Row(
+                      children: [
+                        Icon(Icons.list_alt, size: 20),
+                        SizedBox(width: 8),
+                        Text('Ver Conteúdo'),
+                      ],
+                    ),
+                  ),
+
                   const PopupMenuItem(
                     value: 'edit',
                     child: Row(
@@ -562,6 +607,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
 
   void _handleSubjectAction(String action, subject) {
     switch (action) {
+      //
       case 'edit':
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -569,6 +615,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
           ),
         );
         break;
+
       case 'add_child':
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -576,9 +623,19 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
           ),
         );
         break;
+
+      case 'view_content': // <<< NOVO CASE
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => SubjectContentScreen(subject: subject),
+          ),
+        );
+        break;
+
       case 'delete':
         _showDeleteDialog(subject);
         break;
+
     }
   }
 
