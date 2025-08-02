@@ -388,4 +388,5 @@ final summariesBySubjectHierarchyProvider = StateNotifierProvider.family<Summari
   // Chama um novo método para carregar os dados da hierarquia
   notifier.loadSummariesByHierarchy(subjectId);
   return notifier;
+
 });
