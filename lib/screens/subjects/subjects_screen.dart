@@ -162,14 +162,102 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
     }
   }
 
+// SUBSTITUA o método _buildListView existente por este:
   Widget _buildListView(List subjects) {
+    // Filtra apenas as matérias raiz (que não têm um pai)
+    final rootSubjects = subjects.where((s) => s.parentId == null).toList();
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: subjects.length,
+      itemCount: rootSubjects.length,
       itemBuilder: (context, index) {
-        final subject = subjects[index];
-        return _buildSubjectListItem(subject);
+        final subject = rootSubjects[index];
+        // Usamos um novo widget auxiliar recursivo para construir cada item
+        return _buildSubjectTile(subject, subjects);
       },
+    );
+  }
+
+// SUBSTITUA a versão anterior deste método por esta nova versão
+  Widget _buildSubjectTile(dynamic subject, List allSubjects, {int depth = 0}) {
+    final children = allSubjects.where((s) => s.parentId == subject.id).toList();
+
+    if (children.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(left: depth * 16.0),
+        child: _buildSubjectListItem(subject),
+      );
+    }
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 12, left: depth * 16.0),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        key: PageStorageKey<String>(subject.id),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Color(int.parse(subject.color.replaceFirst('#', '0xFF'))),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            _getIconData(subject.icon),
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        // <<< INÍCIO DA ALTERAÇÃO >>>
+        // Trocamos o Text por um Row para adicionar o botão de "+"
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Expanded garante que o texto não ultrapasse o espaço disponível
+            Expanded(
+              child: Text(
+                subject.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // Botão para adicionar submatéria
+            IconButton(
+              icon: const Icon(
+                Icons.add_circle_outline,
+                color: AppTheme.primaryColor,
+              ),
+              tooltip: 'Adicionar submatéria',
+              onPressed: () {
+                // Reutiliza a mesma lógica que o menu de ações
+                _handleSubjectAction('add_child', subject);
+              },
+              // Reduz o padding para não ocupar muito espaço
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+        // <<< FIM DA ALTERAÇÃO >>>
+        subtitle: Text(
+          '${subject.summariesCount} resumos, ${children.length} submatérias',
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        children: [
+          for (final child in children)
+            _buildSubjectTile(child, allSubjects, depth: depth + 1),
+        ],
+      ),
     );
   }
 
